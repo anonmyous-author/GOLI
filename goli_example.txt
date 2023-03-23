@@ -1,0 +1,30 @@
+We discuss two ways to encode “containing an object position with an inanimate noun modified by a subsequent adverbial”,  an imaginably common requirement in psycholinguistics experiments, into the constraints which GOLI expects.  
+Note, what follows are sketches of the approaches. A detailed analysis is worthy of a separate study.
+
+**Idea for approach 1 **- GOLI can find those words from a large vocabulary that are classified as “nouns” and “adverbs” by a trained parts-of-speech classifier. The distance D between the positions in which these words appear in the generated sentence can be added as a constraint to the optimization problem.
+
+**Idea for approach 2** - We can curate separate vocabularies V1 comprising nouns and V2 comprising adverbs, each containing the root words of nouns and adverbs that the experimenter would like to use in their stimuli. We can further fix the locations in a sentence where we expect to see nouns and adverbs to appear. 
+
+Note, different from approach 1, this approach further constrains the words that will appear in the generated stimuli, giving the experimenter more control over the generation process. GOLI can then find words from V1 and V2 respectively at the site indices marked out for nouns and adverbs such that the selected sentence looks “grammatically correct”. Grammatical correctness can be enforced through the loss function we describe in Eq 6 (page 5) in the paper. 
+
+For example, if V1 contains the nouns {“book”, “chair”}, V2 contains the adverbs {“careful”, “slow”}, the generated sentence is constrained to contain 8 words, the location for the noun is constrained to appear at index 4, adverb at 5, then the optimizer attempts to fills the gaps in: { _, _, _, book, careful, _, _, _ }, where a noun is sampled at index 4, an adverb at 5, and the remaining words are sampled from a larger, more general vocabulary V.
+
+A generated sentence can then possibly be: “I placed the book carefully on the table.”. The -ly form of “carefully” will be searched for in the optimization process (because we optimize tokens and not words) to make the sentence grammatically plausible. Moreover, the final sentence will be forced to be coherent and grammatical when a loss of the form in Eq 4 is optimized.
+
+Extending the example, had the positional constraints instead been: {careful, _, _, _, book, _, _, _ }, we can expect the optimizer to find the sentence: “Carefully, I placed the book on the shelf.” in which the modified noun appears after the adverb.
+
+Further, it may so happen for certain positional constraints, there are no grammatically correct and meaningful sentences that the optimizer finds. In such cases, we expect the experimenter will relax or modify certain constraints and re-try the optimizer. 
+
+We provide more details of approach 1. Approach 2 works similarly.
+- \theta_map is a parts-of-speech tagger. For any given sentence, the model tags the POS for every word in the sentence. For context, in experiment A in the paper, \theta_map was a sentiment classifier. 
+
+Intuitively, we want to find words which ensure the classifier classifies at least one of them as a noun/NP, another as an adverb, the identified noun appears before the adverb, and the sentence is grammatically correct. 
+
+These constraints can be encoded as:
+1. The site location of what is going to be predicted as a noun (or noun phrase) needs to be less than (appears before) those locations containing an adverb.
+2.  The difference in distance between the location of a noun/NP and the adverb needs to be less than the number of words appearing in the sentence.
+3. Cross-entropy loss will optimize finding words that are nouns/NPs and adverbs.
+4. To achieve grammatical correctness, we can optimize the loss described in Eq 6 (page 5) in the paper.
+
+Encoding a given task in GOLI will require some expertise in the understanding of different common loss functions, how to integrate positional constraints, etc.
+

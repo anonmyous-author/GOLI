@@ -1,0 +1,10 @@
+HotFlip, and other works which have since improved upon it (listed in Section 5 of the paper), implicitly solve just the site-perturbation problem using gradients and not the site-selection problem. Our contribution is in recognizing the existence of both these sub-problems, and showing how they both can be used to make GOLI effective. 
+
+For instance, had we solved both the problems in the context of our two experiments, equation 4 would have been reformulated to:  
+
+L(z.u + (1-z).x; x, \theta_{map}\dot\theta_{LLM}), 
+
+where `z’ is a site-selection variable: a mask-vector of boolean values where if a site is selected (value of 1), we find a replacement `u’ at the site; if it is not selected (value of 0), we retain the original token `x’. This bi-level optimization would then find an optimal z: the best word to pick for modification, and u: the best modification to employ at the optimal site. In the context of this formulation, all prior works solve only for `u’ and not `z’. If `z’ is selected at random, then our formulation reduces to HotFlip. The dual formulation demonstrates the greater modeling flexibility GOLI provides. 
+
+An example where the role of the site-selection variable `z’ is prominent: generating stimuli that contain an inanimate noun modified by a subsequent adverbial. One way to model this requirement in GOLI is to find those words from a large vocabulary that are classified as “nouns” and “adverbs” by a trained parts-of-speech classifier. The distance D between the positions in which these words appear in the generated sentence can be controlled by constraining the mask-vector `z’, the site-selection variable, in our formulation. Such constraints are infeasible to add in HotFlip and other more recent works.
+
